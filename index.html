@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehicle Movement on a Map</title>
+
+    <!-----leaflet css---->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f0f2f5; 
+        font-family: Arial, sans-serif; 
+      }
+
+      h1 {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 24px;
+        color: #230f7c;
+      }
+      #map {
+        width: calc(100% - 40px);
+        height: calc(100vh - 120px);
+        margin: 20px;
+        padding: 10px;
+        border: 2px solid #007bff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Vehicle Movement on a Map</h1>
+    <div id="map"></div>
+  </body>
+</html>
+
+<!----leaflet js------->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script>
+  //Map initialization
+  var map = L.map("map").setView([28.7041, 77.1025], 11);
+
+  //osm layer
+  var osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  });
+  osm.addTo(map);
+
+  // marker icon
+  var taxiIcon = L.icon({
+    iconUrl: "img/taxi.png",
+    iconSize: [70, 70],
+  });
+
+  //marker
+  var marker = L.marker([28.7041, 77.1025], { icon: taxiIcon }).addTo(map);
+
+  // Simulated path
+  var path = [
+    [28.7041, 77.1025],
+    [28.705, 77.104],
+    [28.706, 77.106],
+    [28.707, 77.108],
+  ];
+
+  var i = 0;
+  setInterval(() => {
+    if (i < path.length) {
+      marker.setLatLng(path[i]);
+      i++;
+    } else {
+      clearInterval(intervalId); // Stop the interval when path ends
+    }
+  }, 2000); // Update every 2 seconds
+
+  //map click event
+  map.on("click", function (e) {
+    console.log(e);
+
+    var secondMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+
+    L.Routing.control({
+      waypoints: [
+        L.latLng(28.7041, 77.1025),
+        L.latLng(e.latlng.lat, e.latlng.lng),
+      ],
+    })
+      .on("routesfound", function (e) {
+        console.log(e);
+        e.routes[0].coordinates.forEach(function (coord, index) {
+          setTimeout(() => {
+            marker.setLatLng([coord.lat, coord.lng]);
+          }, 100 * index);
+        });
+      })
+
+      .addTo(map);
+  });
+
+</script>
